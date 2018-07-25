@@ -1,33 +1,64 @@
 import logging
 import jwt
 import datetime
-from odoo import http
-from odoo.http import request, Response
-
+from odoo import http, service, registry, SUPERUSER_ID
+from odoo.http import request
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 _logger = logging.getLogger(__name__)
 
 SECRET_KEY = "skjdfe48ueq893rihesdio*($U*WIO$u8"
 
+def compute_session_token(session, env):
+    user = env['res.users'].sudo().browse(session.uid)
+    _logger.info(session.uid)
+    return user._compute_session_token(session.sid)
+
 class Validator:
 
     def create_token(self, user):
         try:
+            exp = datetime.datetime.utcnow() + datetime.timedelta(days=30)
             payload = {
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=30),
+                'exp': exp,
                 'iat': datetime.datetime.utcnow(),
                 'sub': user['id'],
-                'company_id': 12312
+                'lgn': user['login'],
             }
 
-            return jwt.encode(
+            token = jwt.encode(
                 payload,
                 SECRET_KEY,
                 algorithm='HS256'
             )
+
+            self.save_token(token, user['id'], exp)
+
+            return token
         except Exception as ex:
             _logger.error(ex)
-            return ex
+            raise
+
+    def save_token(self, token, uid, exp):
+        request.env['jwt.access_token'].sudo().create({
+            'user_id': uid,
+            'expires': exp.strftime(DEFAULT_SERVER_DATETIME_FORMAT),
+            'token': token,
+        })
+
+    def verify(self, token):
+        record = request.env['jwt.access_token'].sudo().search([
+            ('token', '=', token)
+        ])
+
+        if len(record) != 1:
+            return False
+
+        if not record.is_valid():
+            return False
+        
+        return record.user_id
+        
     
     def verify_token(self, token):
         try:
@@ -48,10 +79,7 @@ class Validator:
             #     return result
             # usr = usr[0]
             # log the user in
-            try:
-                uid = request.session.authenticate(request.session.db, uid=payload['sub'], password=token)
-            except Exception:
-                raise
+            uid = request.session.authenticate(request.session.db, uid=payload['sub'], password=token)
             if not uid:
                 result['message'] = 'login-failed'
                 return result
@@ -64,6 +92,11 @@ class Validator:
         except jwt.InvalidTokenError:
             result['message'] = 'token-invalid'
             return result
+        except Exception:
+            # raise
+            result['message'] = 'login-fail'
+            raise
+            # return result
 
 
 validator = Validator()

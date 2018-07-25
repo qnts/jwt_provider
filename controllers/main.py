@@ -107,15 +107,33 @@ class JwtProvider(http.Controller):
             return self.response(message='incorrect login', status=False)
 
         # login success, generate token
-        user = request.env.user.read()[0]
+        user = request.env.user.read(['id', 'login', 'company_id'])[0]
         _logger.info(user['id'])
         token = validator.create_token(user)
         return self.response(data={ 'user': user, 'token': token })
 
     @http.route('/api/v1/me', type='json', auth='public', csrf=False, cors='*')
-    def object(self, **kw):
+    def me(self, **kw):
         http_method, body, headers, token = self.parse_request()
         result = validator.verify_token(token)
         if not result['status']:
             return self.response(status=False, message=result['message'])
-        return self.response(result)
+
+        user = request.env.user.read(['id', 'login', 'company_id'])[0]
+        return self.response(user)
+
+    @http.route('/api/v1/logout', type='json', auth='public', csrf=False, cors='*')
+    def logout(self, **kw):
+        http_method, body, headers, token = self.parse_request()
+        result = validator.verify_token(token)
+        if not result['status']:
+            return self.response(status=False, message=result['message'])
+
+        self._logout(token)
+        return self.response()
+
+    def _logout(self, token):
+        request.session.logout()
+        request.env['jwt.access_token'].sudo().search([
+            ('token', '=', token)
+        ]).unlink()

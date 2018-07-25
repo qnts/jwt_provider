@@ -24,7 +24,7 @@
     'depends': ['web'],
 
     'external_dependencies': {
-        'python': ['pyjwt'],
+        'python': ['jwt'],
     },
 
     # always loaded
