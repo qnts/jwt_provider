@@ -5,7 +5,7 @@ import jwt
 import datetime
 from odoo import http
 from odoo.http import request, Response
-
+from pprint import pprint
 # from urllib.parse import urlparse
 # from urllib.parse import urlunparse
 # try:
@@ -18,6 +18,7 @@ from ..validator import validator
 
 _logger = logging.getLogger(__name__)
 
+return_fields = ['id', 'login', 'name', 'company_id']
 
 class JwtProvider(http.Controller):
     # def _get_escaped_full_path(self, request):
@@ -53,7 +54,11 @@ class JwtProvider(http.Controller):
 
     def parse_request(self):
         http_method = request.httprequest.method
-        body = http.request.params
+        try:
+            body = http.request.params
+        except Exception:
+            body = {}
+
         headers = dict(list(request.httprequest.headers.items()))
         if 'wsgi.input' in headers:
             del headers['wsgi.input']
@@ -85,6 +90,14 @@ class JwtProvider(http.Controller):
             'message': message
         }
         return response
+    
+    def json_response(self, **kw):
+        res = self.response(**kw)
+
+        return {
+            'id': None,
+            'result': res
+        }
 
     @http.route('/api/v1/info', auth='public')
     def index(self, **kw):
@@ -107,8 +120,8 @@ class JwtProvider(http.Controller):
             return self.response(message='incorrect login', status=False)
 
         # login success, generate token
-        user = request.env.user.read(['id', 'login', 'company_id'])[0]
-        _logger.info(user['id'])
+        user = request.env.user.read(return_fields)[0]
+
         token = validator.create_token(user)
         return self.response(data={ 'user': user, 'token': token })
 
@@ -119,7 +132,7 @@ class JwtProvider(http.Controller):
         if not result['status']:
             return self.response(status=False, message=result['message'])
 
-        user = request.env.user.read(['id', 'login', 'company_id'])[0]
+        user = request.env.user.read()[0]
         return self.response(user)
 
     @http.route('/api/v1/logout', type='json', auth='public', csrf=False, cors='*')

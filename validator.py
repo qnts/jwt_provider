@@ -9,11 +9,6 @@ _logger = logging.getLogger(__name__)
 
 SECRET_KEY = "skjdfe48ueq893rihesdio*($U*WIO$u8"
 
-def compute_session_token(session, env):
-    user = env['res.users'].sudo().browse(session.uid)
-    _logger.info(session.uid)
-    return user._compute_session_token(session.sid)
-
 class Validator:
 
     def create_token(self, user):
@@ -52,11 +47,15 @@ class Validator:
         ])
 
         if len(record) != 1:
+
+            _logger.info('not found %s' % token)
             return False
 
         if not record.is_valid():
             return False
         
+
+        _logger.info('found for %s' % token)
         return record.user_id
         
     
@@ -67,6 +66,10 @@ class Validator:
                 'message': None,
             }
             payload = jwt.decode(token, SECRET_KEY)
+
+            if not self.verify(token):
+                result['message'] = 'token-invalid'
+                return result
             # verify expiration
             # We don't need to verify since jwt has done it for us (which would raise a 'jwt.ExpiredSignatureError')
             # if datetime.datetime.utcnow().timestamp() > payload['exp']:
@@ -94,8 +97,8 @@ class Validator:
             return result
         except Exception:
             # raise
-            result['message'] = 'login-fail'
-            raise
+            result['message'] = 'token-invalid'
+            return result
             # return result
 
 

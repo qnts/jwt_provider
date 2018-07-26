@@ -14,7 +14,10 @@ class Users(models.Model):
         if user_id:
             return user_id
         
-        return validator.verify(password)
+        uid = validator.verify(password)
+        _logger.info(uid)
+
+        return uid
             
 
     @api.model
