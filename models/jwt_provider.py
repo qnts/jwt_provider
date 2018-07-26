@@ -6,7 +6,7 @@ class JwtAccessToken(models.Model):
     _name = 'jwt.access_token'
 
     token = fields.Char('Access Token', required=True)
-    user_id = fields.Many2one('res.users', string='User', required=True)
+    user_id = fields.Many2one('res.users', string='User', required=True, ondelete='cascade')
     expires = fields.Datetime('Expires', required=True)
 
     @api.multi

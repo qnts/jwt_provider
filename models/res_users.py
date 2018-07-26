@@ -29,3 +29,6 @@ class Users(models.Model):
             if not validator.verify(password):
                 raise
 
+    @api.model
+    def create(self, values):
+        return super(Users, self).create(values)

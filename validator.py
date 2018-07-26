@@ -1,5 +1,6 @@
 import logging
 import jwt
+import re
 import datetime
 from odoo import http, service, registry, SUPERUSER_ID
 from odoo.http import request
@@ -9,7 +10,11 @@ _logger = logging.getLogger(__name__)
 
 SECRET_KEY = "skjdfe48ueq893rihesdio*($U*WIO$u8"
 
+regex = r"^[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$"
+
 class Validator:
+    def is_valid_email(self, email):
+        return re.search(regex, email)
 
     def create_token(self, user):
         try:

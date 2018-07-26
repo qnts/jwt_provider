@@ -3,9 +3,12 @@ import logging
 import json
 import jwt
 import datetime
+import werkzeug
 from odoo import http
 from odoo.http import request, Response
 from pprint import pprint
+from odoo.addons.auth_signup.models.res_users import SignupError
+from odoo.exceptions import UserError
 # from urllib.parse import urlparse
 # from urllib.parse import urlunparse
 # try:
@@ -112,16 +115,17 @@ class JwtProvider(http.Controller):
     def login(self, **kw):
         # uri, http_method, body, headers = self._extract_params(request, kw)
         http_method, body, headers, token = self.parse_request()
+
+        return self.do_login(body['login'], body['password'])
+    
+    def do_login(self, login, password):
+        # get current db
         state = self.get_state()
-
-        uid = request.session.authenticate(state['d'], body['login'], body['password'])
-
+        uid = request.session.authenticate(state['d'], login, password)
         if not uid:
             return self.response(message='incorrect login', status=False)
-
         # login success, generate token
         user = request.env.user.read(return_fields)[0]
-
         token = validator.create_token(user)
         return self.response(data={ 'user': user, 'token': token })
 
@@ -150,3 +154,54 @@ class JwtProvider(http.Controller):
         request.env['jwt.access_token'].sudo().search([
             ('token', '=', token)
         ]).unlink()
+
+    @http.route('/api/v1/register', type='json', auth='public', csrf=False, cors='*')
+    def register(self, **kw):
+        http_method, body, headers, token = self.parse_request()
+
+        values = body.copy()
+
+        # validate body
+        if not validator.is_valid_email(values.get('login')):
+            return self.response(status=False, message='email-invalid')
+        # user = request.env['res.users'].sudo().search([('login', '=', values.get('login'))])
+
+        # if user:
+        #     return self.response(status=False, message='email-existed')
+
+        if not values.get('name'):
+            return self.response(status=False, message='name-empty')
+
+        if not values.get('password'):
+            return self.response(status=False, message='password-empty')
+
+        supported_langs = [lang['code'] for lang in request.env['res.lang'].sudo().search_read([], ['code'])]
+        if request.lang in supported_langs:
+            values['lang'] = request.lang
+        
+        # sign up
+        try:
+            self._signup_with_values(values)
+        except (SignupError, AssertionError) as e:
+            if request.env["res.users"].sudo().search([("login", "=", values.get("login"))]):
+                return self.response(status=False, message='email-existed')
+            else:
+                _logger.error("%s", e)
+                return self.response(status=False, message='signup-disabled')
+
+        # log the user in
+        return self.do_login(values.get('login'), values.get('password'))
+
+    def _signup_with_values(self, values):
+        db, login, password = request.env['res.users'].sudo().signup(values, None)
+        request.env.cr.commit()     # as authenticate will use its own cursor we need to commit the current transaction
+        self.signup_email(values)
+    
+    def signup_email(self, values):
+        user_sudo = request.env['res.users'].sudo().search([('login', '=', values.get('login'))])
+        template = request.env.ref('auth_signup.mail_template_user_signup_account_created', raise_if_not_found=False)
+        if user_sudo and template:
+            template.sudo().with_context(
+                lang=user_sudo.lang,
+                auth_login=werkzeug.url_encode({'auth_login': user_sudo.email}),
+            ).send_mail(user_sudo.id, force_send=True)
