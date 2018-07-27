@@ -12,6 +12,7 @@ SECRET_KEY = "skjdfe48ueq893rihesdio*($U*WIO$u8"
 
 regex = r"^[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$"
 
+
 class Validator:
     def is_valid_email(self, email):
         return re.search(regex, email)
@@ -105,6 +106,5 @@ class Validator:
             result['message'] = 'token-invalid'
             return result
             # return result
-
 
 validator = Validator()

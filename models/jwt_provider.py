@@ -21,4 +21,3 @@ class JwtAccessToken(models.Model):
     def is_expired(self):
         self.ensure_one()
         return datetime.now() > datetime.strptime(self.expires, DEFAULT_SERVER_DATETIME_FORMAT)
-
