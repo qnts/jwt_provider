@@ -87,6 +87,7 @@ Authorization: Bearer your_token
     Email address already existed
 
   `501`: Signup is disabled
+
   `200`: OK
   ```
   {
