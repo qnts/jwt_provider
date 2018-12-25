@@ -1,5 +1,9 @@
 # jwt_provider
 
+**Update**: Module for Odoo 12 with normal GET/POST endpoint (no json RPC) is now available, checkout branch **12.0**
+
+I haven't tested the module 12 for odoo 11 yet.
+
 A simple jwt provider for Odoo 11.
 
 This module is in development. Any contribution is welcome.
