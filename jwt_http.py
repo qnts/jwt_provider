@@ -87,7 +87,7 @@ class JwtHttp:
         state = self.get_state()
         uid = request.session.authenticate(state['d'], login, password)
         if not uid:
-            return self.response(message='incorrect login', success=False)
+            return self.errcode(code=400, message='incorrect login')
         # login success, generate token
         user = request.env.user.read(return_fields)[0]
         token = validator.create_token(user)
