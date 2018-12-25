@@ -4,10 +4,6 @@
 
 I haven't tested the module 12 for odoo 11 yet.
 
-A simple jwt provider for Odoo 11.
-
-This module is in development. Any contribution is welcome.
-
 ## Prerequisites
 
 This module require `pyjwt` and `simplejson` to be installed. Run:
