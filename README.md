@@ -17,7 +17,7 @@ If you run odoo in docker, remember to login to bash in docker container and run
 
 Download or clone this repo and move it to odoo addons dir. Install it via odoo just like a normal module. This module require zero confiugration, just change the `SECRET_CODE` in `validator.py` for your own.
 
-# Developer
+## Developer
 
 Developers might need to verify jwt token inside private endpoints:
 
