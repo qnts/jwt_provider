@@ -1,8 +1,6 @@
 # jwt_provider
 
-**Update**: Module for Odoo 12 with normal GET/POST endpoint (no json RPC), checkout branch **12.0**
-
-I haven't tested the module 12 for odoo 11 yet.
+This module is meant for developers, building endpoints for web and mobile app.
 
 ## Prerequisites
 
@@ -19,11 +17,22 @@ If you run odoo in docker, remember to login to bash in docker container and run
 
 Download or clone this repo and move it to odoo addons dir. Install it via odoo just like a normal module. This module require zero confiugration, just change the `SECRET_CODE` in `validator.py` for your own.
 
+# Developer
+
+Developers might need to verify jwt token inside private endpoints:
+
+```python
+http_method, body, headers, token = jwt_http.parse_request()
+result = validator.verify_token(token)
+if not result['status']:
+    return jwt_http.errcode(code=result['code'], message=result['message'])
+```
+
 ## To Do
 
 - Add an interface to store secret key (instead of hard-coding the key) and ability to pick a hashing algorithm (currently we use HMACSHA256).
 
-# Endpoints
+## Endpoints
 
 For private endpoints, include your jwt token in the header like this:
 
@@ -44,7 +53,7 @@ Authorization: Bearer your_token
   `400`: Incorect login
 
   `200`: OK
-  ```
+  ```json
   {
     "data": {
         "user": {
@@ -89,7 +98,7 @@ Authorization: Bearer your_token
   `501`: Signup is disabled
 
   `200`: OK
-  ```
+  ```json
   {
     "data": {
         "user": {
@@ -117,7 +126,7 @@ Authorization: Bearer your_token
   `498`: Token invalid or expired
 
   `200`: OK, return user object
-  ```
+  ```json
   {
     "data": null,
     "success": {
