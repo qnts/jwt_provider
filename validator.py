@@ -2,6 +2,7 @@ import logging
 import jwt
 import re
 import datetime
+import traceback
 from odoo import http, service, registry, SUPERUSER_ID
 from odoo.http import request
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
@@ -35,36 +36,32 @@ class Validator:
 
             self.save_token(token, user['id'], exp)
 
-            return token
+            return token.decode('utf-8')
         except Exception as ex:
             _logger.error(ex)
             raise
 
     def save_token(self, token, uid, exp):
-        request.env['jwt.access_token'].sudo().create({
+        request.env['jwt_provider.access_token'].sudo().create({
             'user_id': uid,
             'expires': exp.strftime(DEFAULT_SERVER_DATETIME_FORMAT),
             'token': token,
         })
 
     def verify(self, token):
-        record = request.env['jwt.access_token'].sudo().search([
+        record = request.env['jwt_provider.access_token'].sudo().search([
             ('token', '=', token)
         ])
 
         if len(record) != 1:
-
             _logger.info('not found %s' % token)
             return False
 
-        if not record.is_valid():
+        if record.is_expired:
             return False
-        
 
-        _logger.info('found for %s' % token)
         return record.user_id
-        
-    
+
     def verify_token(self, token):
         try:
             result = {
@@ -74,37 +71,24 @@ class Validator:
             payload = jwt.decode(token, SECRET_KEY)
 
             if not self.verify(token):
-                result['message'] = 'token-invalid'
+                result['message'] = 'Token invalid or expired'
+                result['code'] = 498
+                _logger.info('11111')
                 return result
-            # verify expiration
-            # We don't need to verify since jwt has done it for us (which would raise a 'jwt.ExpiredSignatureError')
-            # if datetime.datetime.utcnow().timestamp() > payload['exp']:
-            #     return False
 
-            # get user password
-            # usr = request.env['res.users'].sudo().browse(payload['sub']).read(['password'])
-            # if len(usr) == 0:
-            #     result['message'] = 'user-not-found'
-            #     return result
-            # usr = usr[0]
-            # log the user in
             uid = request.session.authenticate(request.session.db, uid=payload['sub'], password=token)
             if not uid:
-                result['message'] = 'login-failed'
+                result['message'] = 'Token invalid or expired'
+                result['code'] = 498
+                _logger.info('2222')
                 return result
 
             result['status'] = True
             return result
-        except jwt.ExpiredSignatureError:
-            result['message'] = 'token-expired'
+        except (jwt.ExpiredSignatureError, jwt.InvalidTokenError, Exception) as e:
+            result['code'] = 498
+            result['message'] = 'Token invalid or expired'
+            _logger.error(traceback.format_exc())
             return result
-        except jwt.InvalidTokenError:
-            result['message'] = 'token-invalid'
-            return result
-        except Exception:
-            # raise
-            result['message'] = 'token-invalid'
-            return result
-            # return result
 
 validator = Validator()

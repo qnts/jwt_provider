@@ -3,21 +3,16 @@ from datetime import datetime, timedelta
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 class JwtAccessToken(models.Model):
-    _name = 'jwt.access_token'
+    _name = 'jwt_provider.access_token'
+    _description = 'Store user access token for one-time-login'
 
     token = fields.Char('Access Token', required=True)
     user_id = fields.Many2one('res.users', string='User', required=True, ondelete='cascade')
     expires = fields.Datetime('Expires', required=True)
 
-    @api.multi
-    def is_valid(self):
-        """
-        Checks if the access token is valid.
-        """
-        self.ensure_one()
-        return not self.is_expired()
+    is_expired = fields.Boolean(compute='_compute_is_expired')
 
-    @api.multi
-    def is_expired(self):
-        self.ensure_one()
-        return datetime.now() > datetime.strptime(self.expires, DEFAULT_SERVER_DATETIME_FORMAT)
+    @api.depends('expires')
+    def _compute_is_expired(self):
+        for token in self:
+            token.is_expired = datetime.now() > token.expires

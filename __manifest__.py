@@ -3,7 +3,7 @@
     'name': "jwt_provider",
 
     'summary': """
-        Provide a simple rest using jwt for odoo 11""",
+        Provide a simple rest using jwt for odoo 12""",
 
     'description': """
         Key features:
@@ -26,15 +26,13 @@
     'external_dependencies': {
         'python': ['jwt'],
     },
-
-    # always loaded
     'data': [
-        # 'security/ir.model.access.csv',
-        #'views/views.xml',
-        #'views/templates.xml',
+        'security/ir.model.access.csv',
+        'views/user_view.xml',
     ],
-    # only loaded in demonstration mode
+    'css': [
+        'static/src/css/jwt.css',
+    ],
     'demo': [
-        #'demo/demo.xml',
     ],
 }
