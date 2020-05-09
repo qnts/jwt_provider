@@ -2,6 +2,8 @@
 
 This module is meant for developers, building endpoints for web and mobile app.
 
+Currently supports odoo `11.0` `12.0` and the latest `13.0`.
+
 ## Prerequisites
 
 This module require `pyjwt` and `simplejson` to be installed. Run:
