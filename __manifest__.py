@@ -24,7 +24,7 @@
     'depends': ['web'],
 
     'external_dependencies': {
-        'python': ['jwt'],
+        'python': ['jwt', 'simplejson'],
     },
     'data': [
         'security/ir.model.access.csv',
