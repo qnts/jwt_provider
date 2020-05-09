@@ -39,13 +39,12 @@ class Users(models.Model):
             if not validator.verify(password):
                 raise
 
-    @api.depends('image')
+    @api.depends()
     def _compute_avatar(self):
         base = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
         for u in self:
             u.avatar = werkzeug.urls.url_join(base, 'web/avatar/%d' % u.id)
 
-    @api.multi
     def to_dict(self, single=False):
         res = []
         for u in self:

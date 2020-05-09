@@ -14,7 +14,7 @@ class WebController(http.Controller):
         '/web/avatar/<int:id>',
         '/web/avatar/<int:id>/<string:size>'
     ], auth='public', csrf=False, cors='*')
-    def avatar(self, id=None, size='small', **kw):
+    def avatar(self, id=None, size='128', **kw):
         # get product
         headers = []
         try:
@@ -25,15 +25,17 @@ class WebController(http.Controller):
                 # determine field to get
                 field_size = 'image'
                 resize = True
-                if size in ['medium', 'small']:
+                if size in ['512', '128']:
                     field_size = '%s_%s' % (field_size, size)
                     resize = False
+                else:
+                    field_size = 'image_1920'
                 content = getattr(user, field_size)
                 # the following lines purpose is to get mimetype
                 attachment = request.env['ir.attachment'].sudo().search([
                     ('res_model', '=', 'res.partner'),
                     ('res_id', '=', user.partner_id.id),
-                    ('res_field', '=', 'image'),
+                    ('res_field', '=', 'image_1920'),
                 ])
                 if attachment.exists():
                     mimetype = attachment.mimetype
@@ -49,7 +51,7 @@ class WebController(http.Controller):
                         width = None
                         height = None
                     if width:
-                        content = odoo.tools.image_resize_image(base64_source=content, size=(width or None, height or None), encoding='base64', avoid_if_small=True)
+                        content = odoo.tools.image_resize_image(base64_source=content, size=(width or None, height or None), encoding='base64', avoid_if_128=True)
                         # force mime type becuz of image resizer
                         # mimetype = 'image/png'
                 image_base64 = base64.b64decode(content)
