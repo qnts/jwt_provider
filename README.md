@@ -4,11 +4,13 @@ This module is meant for developers, building endpoints for web and mobile app.
 
 Currently supports odoo `11.0` `12.0` and the latest `13.0`.
 
+**Attention**: There is a break change in `13.0`, see the **Installation** section.
+
 ## Prerequisites
 
 This module require `pyjwt` and `simplejson` to be installed. Run:
 
-```
+```bash
 pip3 install pyjwt
 pip3 install simplejson
 ```
@@ -17,7 +19,13 @@ If you run odoo in docker, remember to login to bash in docker container and run
 
 ## Installation
 
-Download or clone this repo and move it to odoo addons dir. Install it via odoo just like a normal module. This module require zero confiugration, just change the `SECRET_CODE` in `validator.py` for your own.
+Download or clone this repo and move it to odoo addons dir. Install it via odoo just like a normal module.
+
+Version 13: now will get secret key from os ENV, using `os.environ.get('ODOO_JWT_KEY')`.
+
+- If you're running odoo locally (or inside a docker container), run `EXPORT ODOO_JWT_KEY="your_key"`.
+
+- If using docker compose, add `ODOO_JWT_KEY=your_key` in `environment` section of yml file.
 
 ## Developer
 

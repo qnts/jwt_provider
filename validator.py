@@ -3,13 +3,12 @@ import jwt
 import re
 import datetime
 import traceback
+import os
 from odoo import http, service, registry, SUPERUSER_ID
 from odoo.http import request
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 _logger = logging.getLogger(__name__)
-
-SECRET_KEY = "skjdfe48ueq893rihesdio*($U*WIO$u8"
 
 regex = r"^[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$"
 
@@ -17,6 +16,9 @@ regex = r"^[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:
 class Validator:
     def is_valid_email(self, email):
         return re.search(regex, email)
+
+    def key(self):
+        return os.environ.get('ODOO_JWT_KEY')
 
     def create_token(self, user):
         try:
@@ -30,7 +32,7 @@ class Validator:
 
             token = jwt.encode(
                 payload,
-                SECRET_KEY,
+                self.key(),
                 algorithm='HS256'
             )
 
@@ -68,7 +70,7 @@ class Validator:
                 'status': False,
                 'message': None,
             }
-            payload = jwt.decode(token, SECRET_KEY)
+            payload = jwt.decode(token, self.key())
 
             if not self.verify(token):
                 result['message'] = 'Token invalid or expired'
