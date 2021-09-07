@@ -1,8 +1,8 @@
 # jwt_provider
 
-## Looking for `14`?
-
-Meet [jwt_provider2](https://github.com/qnts/jwt_provider2) which is a completely rework, only for Odoo 14 (and above, maybe).
+> :warning: **Looking for `odoo 14` module?**
+> 
+> Meet [jwt_provider2](https://github.com/qnts/jwt_provider2) which is a completely rework, only for Odoo 14 (and above, maybe).
 
 ## Description
 
