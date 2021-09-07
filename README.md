@@ -1,8 +1,14 @@
 # jwt_provider
 
+## Looking for `14`?
+
+Meet [jwt_provider2](https://github.com/qnts/jwt_provider2) which is a completely rework, only for Odoo 14 (and above, maybe).
+
+## Description
+
 This module is meant for developers, building endpoints for web and mobile app.
 
-Currently supports odoo `11.0` `12.0` and the latest `13.0`.
+Currently supports odoo `11.0` `12.0` and `13.0`.
 
 **Attention**: There is a break change in `13.0`, see the **Installation** section.
 
